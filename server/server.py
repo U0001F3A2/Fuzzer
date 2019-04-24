@@ -29,12 +29,20 @@ class EchoHandler(BaseRequestHandler):
 				print("valid msg", end = ' ')
 				print(msg, end = ' ')
 				print(self.server.valid_count)
+				if self.server.f:
+					self.server.f.write("valid msg", end = ' ')
+					self.server.f.write(msg, end = ' ')
+					self.server.f.write(self.server.valid_count)
 				self.request.send(b'\x00')
 			else:
 				self.server.invalid_count += 1
 				print("invalid msg", end = ' ')
 				print(msg, end = ' ')
 				print(self.server.invalid_count)
+				if self.server.f:
+					self.server.f.write("valid msg", end = ' ')
+					self.server.f.write(msg, end = ' ')
+					self.server.f.write(self.server.valid_count)
 				self.request.send(b'\xff')
 
 	#helper function to valid the payload
@@ -55,6 +63,11 @@ class Server(TCPServer):
 		self.valid_count = 0
 		self.invalid_count = 0
 		self.read_pattern("server_pattern.txt") # read the user-defined pattern from file
+		print(self.log)
+		if self.log:
+			self.f = open(self.log,"a")
+		else:
+			self.f = None
 
 	#read pattern from file
 	#the pattern should be 1 line and less than 1000 bytes
@@ -88,6 +101,7 @@ def check_port(port):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(prog = "server", usage = 'python3 server.py -p [port]')
 	parser.add_argument('-p', '--port', dest = 'port', type = int, required = True, help = 'port to listen')
+	parser.add_argument("--log", dest='log', help='file for logging')
 	args = parser.parse_args()
 
 	if not check_port(args.port):
