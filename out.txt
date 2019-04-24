@@ -1,0 +1,178 @@
+diff --git a/fuzzer/APPFuzzer.py b/fuzzer/APPFuzzer.py
+index 3b8b0d1..aefa114 100644
+--- a/fuzzer/APPFuzzer.py
++++ b/fuzzer/APPFuzzer.py
+@@ -6,12 +6,18 @@ import sys
+ 
+ #class for APP fuzzing
+ class APPFuzzer(TCPSession):
+-	def __init__(self, src, dst, sport, dport):
++	def __init__(self, src, dst, sport, dport, log=None):
+ 		TCPSession.__init__(self, src, dst, sport, dport)
+ 		self.defaultset = list()
+ 		self.file_set = list()
+ 		self.valid = 0
+ 		self.invalid = 0
++		self.log = log
++		print(self.log)
++		if self.log:
++			self.f = open(self.log,"a")
++		else:
++			self.f = None
+ 
+ 	#build default test set
+ 	#the number of tests can be specified by user
+@@ -47,6 +53,10 @@ class APPFuzzer(TCPSession):
+ 			print("[+] Sending payload:", end = ' ')
+ 			print(p)
+ 			self.send(p)
++			if self.f:
++				self.f.write("[+] Sending payload:" + ' ')
++				self.f.write(str(p) + '\n')
++		self.f.close()
+ 		self.close()
+ 
+ 	#overwrite ack func in TCPSession class
+@@ -92,6 +102,9 @@ class APPFuzzer(TCPSession):
+ 			print("[+] Sending payload:", end = ' ')
+ 			print(p)
+ 			self.send(p)
++			if self.f:
++				self.f.write("[+] Sending payload:" + ' ')
++				self.f.write(str(p) + '\n')
+ 		self.close()
+ 
+ 
+diff --git a/fuzzer/Fuzzer.py b/fuzzer/Fuzzer.py
+index 2a434f4..d5513b8 100644
+--- a/fuzzer/Fuzzer.py
++++ b/fuzzer/Fuzzer.py
+@@ -83,6 +83,7 @@ def run(args):
+ 	dst_ip = args.dst
+ 	dport = args.dport
+ 	sport = args.sport
++	log = args.log
+ 
+ 	if args.layer == "IP":
+ 		# no specified file, run default fuzzing
+@@ -132,7 +133,7 @@ def run(args):
+ 			print("APP default run")
+ 			size = get_size(args.size)
+ 			try:
+-				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport)
++				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport, log)
+ 				fuzzer.default_run(args.number, size)
+ 				print("[+]Finished, {total} packets sent, {valid} valid, {invalid} invalid".format(total = fuzzer.valid+fuzzer.invalid, valid = fuzzer.valid, invalid = fuzzer.invalid))
+ 			except KeyboardInterrupt:
+@@ -143,7 +144,7 @@ def run(args):
+ 		else:
+ 			print("APP run from file")
+ 			try:
+-				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport)
++				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport, log)
+ 				fuzzer.run_from_file(args.file)
+ 				print("[+]Finished, {total} packets sent, {valid} valid, {invalid} invalid".format(total = fuzzer.valid+fuzzer.invalid, valid = fuzzer.valid, invalid = fuzzer.invalid))
+ 			except KeyboardInterrupt:
+@@ -165,8 +166,10 @@ if __name__ == '__main__':
+ 	parser.add_argument('-n', '--number', dest = 'number', type = int, help = 'number of tests to run')
+ 	parser.add_argument('-s', '--size', dest = 'size', type = str, help = 'size of payload')
+ 	parser.add_argument('-f', '--file', dest = 'file', help = 'file containing tests')
++	parser.add_argument("--log", dest='log', help='file for logging')
+ 	
+ 	args = parser.parse_args()
++	print(args.log)
+ 
+ 	valid_fields = {'IP': ['version', 'ihl', 'tos', 'len', 'id', 'flags', 'frag', 'ttl', 'proto'],
+ 	'TCP' : ['seq', 'ack', 'flags', 'window', 'urgptr', 'dataofs', 'reserved']}
+diff --git a/fuzzer/__pycache__/APPFuzzer.cpython-36.pyc b/fuzzer/__pycache__/APPFuzzer.cpython-36.pyc
+new file mode 100644
+index 0000000..f945df7
+Binary files /dev/null and b/fuzzer/__pycache__/APPFuzzer.cpython-36.pyc differ
+diff --git a/fuzzer/__pycache__/IPFuzzer.cpython-36.pyc b/fuzzer/__pycache__/IPFuzzer.cpython-36.pyc
+new file mode 100644
+index 0000000..d7da31d
+Binary files /dev/null and b/fuzzer/__pycache__/IPFuzzer.cpython-36.pyc differ
+diff --git a/fuzzer/__pycache__/TCPFuzzer.cpython-36.pyc b/fuzzer/__pycache__/TCPFuzzer.cpython-36.pyc
+new file mode 100644
+index 0000000..8f4fcca
+Binary files /dev/null and b/fuzzer/__pycache__/TCPFuzzer.cpython-36.pyc differ
+diff --git a/fuzzer/__pycache__/TcpSession.cpython-36.pyc b/fuzzer/__pycache__/TcpSession.cpython-36.pyc
+new file mode 100644
+index 0000000..5cb1b52
+Binary files /dev/null and b/fuzzer/__pycache__/TcpSession.cpython-36.pyc differ
+diff --git a/fuzzer/asdf.txt b/fuzzer/asdf.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/server/asdf.txt b/server/asdf.txt
+new file mode 100644
+index 0000000..68769f9
+--- /dev/null
++++ b/server/asdf.txt
+@@ -0,0 +1 @@
++invalid msg b"\t\xadC[\xa93'\xd38f"
+diff --git a/server/server.py b/server/server.py
+index b4992c6..074b7e2 100644
+--- a/server/server.py
++++ b/server/server.py
+@@ -29,12 +29,20 @@ class EchoHandler(BaseRequestHandler):
+ 				print("valid msg", end = ' ')
+ 				print(msg, end = ' ')
+ 				print(self.server.valid_count)
++				if self.server.f:
++					self.server.f.write("valid msg" + ' ')
++					self.server.f.write(str(msg) + '\n')
++					self.server.f.write(str(self.server.valid_count) + '\n')
+ 				self.request.send(b'\x00')
+ 			else:
+ 				self.server.invalid_count += 1
+ 				print("invalid msg", end = ' ')
+ 				print(msg, end = ' ')
+ 				print(self.server.invalid_count)
++				if self.server.f:
++					self.server.f.write("invalid msg" + ' ')
++					self.server.f.write(str(msg) + '\n')
++					self.server.f.write(str(self.server.valid_count) + '\n')
+ 				self.request.send(b'\xff')
+ 
+ 	#helper function to valid the payload
+@@ -50,11 +58,17 @@ class EchoHandler(BaseRequestHandler):
+ 
+ 
+ class Server(TCPServer):
+-	def __init__(self, target, handler):
++	def __init__(self, target, handler, log=None):
+ 		TCPServer.__init__(self, target, handler)
+ 		self.valid_count = 0
+ 		self.invalid_count = 0
+ 		self.read_pattern("server_pattern.txt") # read the user-defined pattern from file
++		self.log = log
++		print(self.log)
++		if self.log:
++			self.f = open(self.log,"a")
++		else:
++			self.f = None
+ 
+ 	#read pattern from file
+ 	#the pattern should be 1 line and less than 1000 bytes
+@@ -88,12 +102,13 @@ def check_port(port):
+ if __name__ == '__main__':
+ 	parser = argparse.ArgumentParser(prog = "server", usage = 'python3 server.py -p [port]')
+ 	parser.add_argument('-p', '--port', dest = 'port', type = int, required = True, help = 'port to listen')
++	parser.add_argument("--log", dest='log', help='file for logging')
+ 	args = parser.parse_args()
+ 
+ 	if not check_port(args.port):
+ 		sys.exit(-1)
+ 	try:
+-		serv = Server(('', args.port), EchoHandler)
++		serv = Server(('', args.port), EchoHandler, args.log)
+ 		print("[*]The server is running, press CTRL-C to stop")
+ 	except OSError:
+ 		print("[-]ERROR: port is being used, try another port")
+@@ -104,4 +119,4 @@ if __name__ == '__main__':
+ 	except KeyboardInterrupt:
+ 		print("You pressed CTRL-C")
+ 		print("Aborted! So far {valid} valid, {invalid} invalid ".format(valid=str(serv.valid_count), invalid = str(serv.invalid_count)))
+-		sys.exit(0)
+\ No newline at end of file
++		sys.exit(0)
