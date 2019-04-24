@@ -6,12 +6,18 @@ import sys
 
 #class for APP fuzzing
 class APPFuzzer(TCPSession):
-	def __init__(self, src, dst, sport, dport):
+	def __init__(self, src, dst, sport, dport, log=None):
 		TCPSession.__init__(self, src, dst, sport, dport)
 		self.defaultset = list()
 		self.file_set = list()
 		self.valid = 0
 		self.invalid = 0
+		self.log = log
+		print(self.log)
+		if self.log:
+			self.f = open(self.log,"a")
+		else:
+			self.f = None
 
 	#build default test set
 	#the number of tests can be specified by user
@@ -47,6 +53,10 @@ class APPFuzzer(TCPSession):
 			print("[+] Sending payload:", end = ' ')
 			print(p)
 			self.send(p)
+			if self.f:
+				self.f.write("[+] Sending payload:", end = ' ')
+				self.f.write(p + '\n')
+		self.f.close()
 		self.close()
 
 	#overwrite ack func in TCPSession class
@@ -92,6 +102,9 @@ class APPFuzzer(TCPSession):
 			print("[+] Sending payload:", end = ' ')
 			print(p)
 			self.send(p)
+			if self.f:
+				self.f.write("[+] Sending payload:", end = ' ')
+				self.f.write(p + '\n')
 		self.close()
 
 

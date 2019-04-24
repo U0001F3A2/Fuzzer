@@ -83,6 +83,7 @@ def run(args):
 	dst_ip = args.dst
 	dport = args.dport
 	sport = args.sport
+	log = args.log
 
 	if args.layer == "IP":
 		# no specified file, run default fuzzing
@@ -132,7 +133,7 @@ def run(args):
 			print("APP default run")
 			size = get_size(args.size)
 			try:
-				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport)
+				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport, log)
 				fuzzer.default_run(args.number, size)
 				print("[+]Finished, {total} packets sent, {valid} valid, {invalid} invalid".format(total = fuzzer.valid+fuzzer.invalid, valid = fuzzer.valid, invalid = fuzzer.invalid))
 			except KeyboardInterrupt:
@@ -143,7 +144,7 @@ def run(args):
 		else:
 			print("APP run from file")
 			try:
-				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport)
+				fuzzer = APPFuzzer(src_ip, dst_ip, sport, dport, log)
 				fuzzer.run_from_file(args.file)
 				print("[+]Finished, {total} packets sent, {valid} valid, {invalid} invalid".format(total = fuzzer.valid+fuzzer.invalid, valid = fuzzer.valid, invalid = fuzzer.invalid))
 			except KeyboardInterrupt:
@@ -165,8 +166,10 @@ if __name__ == '__main__':
 	parser.add_argument('-n', '--number', dest = 'number', type = int, help = 'number of tests to run')
 	parser.add_argument('-s', '--size', dest = 'size', type = str, help = 'size of payload')
 	parser.add_argument('-f', '--file', dest = 'file', help = 'file containing tests')
+	parser.add_argument("--log", dest='log', help='file for logging')
 	
 	args = parser.parse_args()
+	print(args.log)
 
 	valid_fields = {'IP': ['version', 'ihl', 'tos', 'len', 'id', 'flags', 'frag', 'ttl', 'proto'],
 	'TCP' : ['seq', 'ack', 'flags', 'window', 'urgptr', 'dataofs', 'reserved']}
