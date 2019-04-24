@@ -32,7 +32,7 @@ class EchoHandler(BaseRequestHandler):
 				if self.server.f:
 					self.server.f.write("valid msg" + ' ')
 					self.server.f.write(str(msg) + '\n')
-					self.server.f.write(self.server.valid_count + '\n')
+					self.server.f.write(str(self.server.valid_count) + '\n')
 				self.request.send(b'\x00')
 			else:
 				self.server.invalid_count += 1
@@ -42,7 +42,7 @@ class EchoHandler(BaseRequestHandler):
 				if self.server.f:
 					self.server.f.write("invalid msg" + ' ')
 					self.server.f.write(str(msg) + '\n')
-					self.server.f.write(self.server.valid_count + '\n')
+					self.server.f.write(str(self.server.valid_count) + '\n')
 				self.request.send(b'\xff')
 
 	#helper function to valid the payload
