@@ -30,7 +30,7 @@ class EchoHandler(BaseRequestHandler):
 				print(msg, end = ' ')
 				print(self.server.valid_count)
 				if self.server.f:
-					self.server.f.write("valid msg" + ' ')
+					self.server.f.write("valid msg" + b' ')
 					self.server.f.write(msg, end = ' ')
 					self.server.f.write(self.server.valid_count)
 				self.request.send(b'\x00')
@@ -40,7 +40,7 @@ class EchoHandler(BaseRequestHandler):
 				print(msg, end = ' ')
 				print(self.server.invalid_count)
 				if self.server.f:
-					self.server.f.write("valid msg" + ' ')
+					self.server.f.write("valid msg" + b' ')
 					self.server.f.write(msg, end = ' ')
 					self.server.f.write(self.server.valid_count)
 				self.request.send(b'\xff')
