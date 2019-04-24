@@ -30,7 +30,7 @@ class EchoHandler(BaseRequestHandler):
 				print(msg, end = ' ')
 				print(self.server.valid_count)
 				if self.server.f:
-					self.server.f.write("valid msg", end = ' ')
+					self.server.f.write("valid msg" + ' ')
 					self.server.f.write(msg, end = ' ')
 					self.server.f.write(self.server.valid_count)
 				self.request.send(b'\x00')
@@ -40,7 +40,7 @@ class EchoHandler(BaseRequestHandler):
 				print(msg, end = ' ')
 				print(self.server.invalid_count)
 				if self.server.f:
-					self.server.f.write("valid msg", end = ' ')
+					self.server.f.write("valid msg" + ' ')
 					self.server.f.write(msg, end = ' ')
 					self.server.f.write(self.server.valid_count)
 				self.request.send(b'\xff')
@@ -58,11 +58,12 @@ class EchoHandler(BaseRequestHandler):
 
 
 class Server(TCPServer):
-	def __init__(self, target, handler):
+	def __init__(self, target, handler, log=None):
 		TCPServer.__init__(self, target, handler)
 		self.valid_count = 0
 		self.invalid_count = 0
 		self.read_pattern("server_pattern.txt") # read the user-defined pattern from file
+		self.log = log
 		print(self.log)
 		if self.log:
 			self.f = open(self.log,"a")
@@ -107,7 +108,7 @@ if __name__ == '__main__':
 	if not check_port(args.port):
 		sys.exit(-1)
 	try:
-		serv = Server(('', args.port), EchoHandler)
+		serv = Server(('', args.port), EchoHandler, args.log)
 		print("[*]The server is running, press CTRL-C to stop")
 	except OSError:
 		print("[-]ERROR: port is being used, try another port")
