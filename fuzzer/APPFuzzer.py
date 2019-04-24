@@ -54,8 +54,8 @@ class APPFuzzer(TCPSession):
 			print(p)
 			self.send(p)
 			if self.f:
-				self.f.write("[+] Sending payload:" + b' ')
-				self.f.write(p + '\n')
+				self.f.write("[+] Sending payload:" + ' ')
+				self.f.write(str(p) + '\n')
 		self.f.close()
 		self.close()
 
@@ -103,8 +103,8 @@ class APPFuzzer(TCPSession):
 			print(p)
 			self.send(p)
 			if self.f:
-				self.f.write("[+] Sending payload:" + b' ')
-				self.f.write(p + '\n')
+				self.f.write("[+] Sending payload:" + ' ')
+				self.f.write(str(p) + '\n')
 		self.close()
 
 
